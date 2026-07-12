@@ -1,0 +1,53 @@
+### RM (pairwise reward model) — Qwen3.6-27B QLoRA + value head, on the preference pairs from prep_rm.py.
+### Zero-edit companion to train_package/qwen27b_qlora.yaml conventions (same base, same LoRA shape).
+### Verify the model id exists on ModelScope/HF before renting ("Qwen3.6-27B" spelling).
+model_name_or_path: Qwen/Qwen3.6-27B
+quantization_bit: 4
+quantization_method: bnb
+trust_remote_code: true
+
+### method — stage rm = pairwise ranking loss on (chosen, rejected) with a scalar value head
+stage: rm
+do_train: true
+finetuning_type: lora
+### SFT-lineage init (industry default AND our own documented design: the README's "SFT-lineage RM").
+### Copy the trained SFT adapter into rmscaffold/sft_adapter/ before train_rm.sh; the RM then continues
+### from the SFT policy's representation instead of raw base. To run a base-init ablation arm instead,
+### comment these two lines out and SAY SO when reporting.
+adapter_name_or_path: sft_adapter
+### create_new_adapter MUST stay false under QLoRA: LF hard-rejects "create new adapter upon a quantized
+### model" (parser._verify_model_args; hit for real 2026-07-12 on GPU). false = CONTINUE training the loaded
+### SFT adapter (value head is fresh regardless) — the standard LF sft->rm QLoRA lineage recipe.
+create_new_adapter: false
+lora_rank: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target: all
+
+### dataset — rm_pairs.jsonl + dataset_info.json live in THIS folder (prep_rm.py writes both)
+dataset: hl_rm
+dataset_dir: .
+template: qwen3            # if this LLaMA-Factory build lacks 'qwen3', change to 'qwen'
+cutoff_len: 8192           # decision-point prompts carry evidence+EDITS+RULED OUT (long, like SFT propose
+                           # inputs). prep_rm drops >8192-est pairs so nothing trains truncated.
+                           # 24G flow-test card: set 4096 AND rerun prep_rm --max-tokens 4096 (OOM lesson).
+overwrite_cache: true
+preprocessing_num_workers: 8
+
+### output — one checkpoint per epoch; score_rm.py picks the best by held-out pair accuracy
+output_dir: out/qwen3.6-27b-hlrm
+logging_steps: 5
+save_strategy: epoch
+plot_loss: true
+overwrite_output_dir: true
+
+### train — pairs are few (hundreds), so keep epochs low; RM overfits ranking data fast.
+### Industry default is ~1 epoch; 2.0 here is the CEILING — per-epoch checkpoints are saved and the
+### held-out score_rm run picks the epoch (take ep1 if ep2 shows the overfit signature).
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 8
+learning_rate: 5.0e-5
+num_train_epochs: 2.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.05
+bf16: true

@@ -1,0 +1,44 @@
+### model — FLOW TEST uses Qwen3-8B (Qwen3.6 has no <27B dense; same family => template/flow transfers).
+### For the REAL run, swap model_name_or_path to: Qwen/Qwen3.6-27B   (needs ~1x H100-80G or A100-80G for 27B QLoRA)
+model_name_or_path: Qwen/Qwen3-8B
+quantization_bit: 4
+quantization_method: bnb
+trust_remote_code: true
+
+### method — QLoRA (4-bit), trains a small adapter; fits a single 24G+ GPU for 8B
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_rank: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target: all
+
+### dataset — train_sharegpt.jsonl + dataset_info.json live in THIS folder (dataset_dir: .)
+dataset: hl_sft
+dataset_dir: .
+template: qwen3            # Qwen3/3.6 family. If LLaMA-Factory build lacks 'qwen3', use 'qwen'. Our targets are
+                          # DIRECT (no <think> blocks) — keep thinking OFF (enable_thinking=false) for the real run.
+cutoff_len: 4096            # FLOW TEST on 24G (4090): MUST stay 4096 — 8192 OOMs on the long (correction/fix)
+                          # samples mid-training (confirmed: crash at step ~13 on an 8192-token sample, 24G).
+                          # REAL RUN on 80G (A100/H100): raise to 8192 to stop truncating the ~7% long inputs
+                          # (the correction/fix inputs carry code = EDITS + source snapshots). Also run with
+                          # PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True (train.sh sets it) to cut fragmentation.
+overwrite_cache: true
+preprocessing_num_workers: 8
+
+### output
+output_dir: out/qwen3-8b-hlsft
+logging_steps: 5
+save_steps: 200
+plot_loss: true
+overwrite_output_dir: true
+
+### train
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 8
+learning_rate: 1.0e-4
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.05
+bf16: true

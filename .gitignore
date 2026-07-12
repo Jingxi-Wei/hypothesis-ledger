@@ -1,0 +1,36 @@
+# --- never upload: personal / private ---
+求职和论文/
+memory/
+.idea/
+
+# --- huge data & artifacts (the review targets code, not data) ---
+dataset/
+autodl_results/
+swe_pro/
+*.tar.gz
+*.tar.gz.sha256
+train_package.zip
+lcb.html
+
+# --- environments & third-party checkouts (mini-swe-agent is its own git clone) ---
+.venv/
+mini-swe-agent/
+
+# --- generated / runtime ---
+__pycache__/
+*.pyc
+*.log
+rmscaffold/out/
+train_package/out/
+
+# third-party checkouts & extra venvs (Terminal-Bench spike)
+terminal-bench-2/
+.venv*/
+
+# jacobian-lens: its own git clone (Apache-2.0, vendored for the eval-phase mechanistic case study)
+jacobian-lens/
+
+# resample DERIVED pair channels: deterministic zero-proxy re-derivations of the tracked source artifacts
+# (candidates/labels/rankings) via rederive_real_pairs.py / derive_rank_pairs.py — regenerate, don't track
+rmscaffold/resample/pairs_realanchor-*.jsonl
+rmscaffold/resample/pairs_rankgap-*.jsonl

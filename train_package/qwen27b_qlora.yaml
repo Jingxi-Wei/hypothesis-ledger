@@ -1,0 +1,39 @@
+### REAL RUN — Qwen3.6-27B QLoRA on A100/H100-80G. Zero-edit companion to qwen_qlora.yaml (the 8B flow-test).
+### Verify the model id exists on ModelScope/HF before renting ("Qwen3.6-27B" spelling).
+model_name_or_path: Qwen/Qwen3.6-27B
+quantization_bit: 4
+quantization_method: bnb
+trust_remote_code: true
+
+### method — QLoRA (4-bit); est. peak ~40-60GB at cutoff 8192, batch 1 (80G comfortable, 48G risky, 40G no)
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_rank: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target: all
+
+### dataset — train_sharegpt.jsonl + dataset_info.json live in THIS folder
+dataset: hl_sft
+dataset_dir: .
+template: qwen3            # if this LLaMA-Factory build lacks 'qwen3', change to 'qwen'
+cutoff_len: 8192           # data is pre-filtered to <8192 est-tokens (prep_sft --max-tokens) => ZERO truncation
+overwrite_cache: true
+preprocessing_num_workers: 8
+
+### output — one checkpoint PER EPOCH so the held-out eval picks the best one (don't trust epoch 3 blindly)
+output_dir: out/qwen3.6-27b-hlsft
+logging_steps: 5
+save_strategy: epoch
+plot_loss: true
+overwrite_output_dir: true
+
+### train
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 8
+learning_rate: 1.0e-4
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.05
+bf16: true

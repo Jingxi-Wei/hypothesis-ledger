@@ -1,0 +1,32 @@
+{
+  "cumulative": {
+    "real_partial": 11,
+    "nodes": 39,
+    "zero_correct_nodes": 29,
+    "real_correct": 19,
+    "zero_wrong_nodes": 18,
+    "real_wrong": 9,
+    "pairs": 8,
+    "zero_correct_frac": 0.744,
+    "ledger_fallback_nodes": 0,
+    "post_feedback_nodes": 19
+  },
+  "session": {
+    "tier_below": 46,
+    "tier_above": 6,
+    "nodes": 39,
+    "pairs": 8,
+    "dist_partial/wrong": 7,
+    "zero_correct_nodes": 29,
+    "real_partial": 11,
+    "dist_wrong": 12,
+    "real_correct": 19,
+    "tier_par": 23,
+    "dist_correct/partial": 4,
+    "zero_wrong_nodes": 18,
+    "dist_correct": 4,
+    "dist_correct/partial/wrong": 2,
+    "real_wrong": 9,
+    "dist_partial": 10
+  }
+}

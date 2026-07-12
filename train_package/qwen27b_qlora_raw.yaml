@@ -1,0 +1,43 @@
+### RAW-TRAJECTORY BASELINE ARM — same base/method as qwen27b_qlora.yaml, two deliberate differences:
+###   1. dataset_dir points at the raw-imitation data (upload dataset/sft_raw/ next to this yaml as sft_raw/)
+###   2. cutoff_len 24576 — measured fit rates on real data: 8192 keeps 1/18 oracle-redirected trajectories,
+###      16384 keeps 10/18, 24576 keeps 17/18. The correction-bearing trajectories ARE the long ones; a small
+###      window would silently turn this baseline into "imitate easy solves only" and rig the comparison.
+###      (This asymmetry itself is a paper point: raw imitation needs ~3x the context to even represent
+###      multi-round self-correction that the structured views carry at 8192.)
+### VRAM: QLoRA 27B @24576, batch 1 — expected ~60-75G peak on A100/H100-80G. If OOM: cutoff_len 16384
+### AND rerun prep_raw_arm.py --max-tokens 16384 locally (data and cutoff must move together; report the
+### reduced oracle coverage honestly).
+model_name_or_path: Qwen/Qwen3.6-27B
+quantization_bit: 4
+quantization_method: bnb
+trust_remote_code: true
+
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_rank: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target: all
+
+dataset: hl_sft
+dataset_dir: sft_raw       # the raw-arm folder (prep_raw_arm.py output), uploaded beside this yaml
+template: qwen3
+cutoff_len: 24576          # see header — matched to prep_raw_arm --max-tokens 24576
+overwrite_cache: true
+preprocessing_num_workers: 8
+
+output_dir: out/qwen3.6-27b-hlraw   # 'hlraw' — serve_vllm.sh maps this adapter to served name 'raw'
+logging_steps: 5
+save_strategy: epoch
+plot_loss: true
+overwrite_output_dir: true
+
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 8
+learning_rate: 1.0e-4
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.05
+bf16: true
